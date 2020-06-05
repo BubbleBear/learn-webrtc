@@ -1,6 +1,16 @@
 import { inspectMediaElementEvents } from '/utils.js';
 import PersistentConnection from '/persistent-connection.js';
 
+const STATES = {
+    new: 0,
+    offered: 1,
+    answered: 2,
+    icing: 3,
+    connected: 4,
+};
+
+const api = `/api/v1/webrtc`;
+
 const iceServers = [
     { urls: 'stun:stun.l.google.com:19302' },
 ];
@@ -16,7 +26,7 @@ remoteVideo.addEventListener('loadeddata', () => {
     remoteVideo.play();
 });
 
-const connection = new PersistentConnection(`/api/v1/asdf${window.location.search}`, { minInterval: 5000 });
+const connection = new PersistentConnection(`${api}/polling${window.location.search}`, { minInterval: 5000 });
 
 inspectMediaElementEvents(localVideo);
 
@@ -56,32 +66,26 @@ async function connect() {
     peerConnection.setLocalDescription(offer);
 
     connection.poll(async (message) => {
-        const sdp = message.sdp;
+        const { state, offer, answer } = message;
 
         console.log(message);
 
-        if (typeof sdp !== 'object') {
-            return;
-        }
-
-        if (JSON.stringify(offer) === JSON.stringify(sdp.offer)) {
-            if (sdp.answer) {
-                const answer = new RTCSessionDescription(sdp.answer);
-                console.log(answer);
-                peerConnection.setRemoteDescription(answer);
-
-                connection.close();
+        switch (state) {
+            case STATES.new: {
+                break;
             }
-        } else {
-            if (sdp.offer && sdp.answer === undefined) {
-                const offer = new RTCSessionDescription(sdp.offer);
-                console.log(offer);
-                peerConnection.setRemoteDescription(offer);
+            case STATES.offered: {
+                if (!offer) {
+                    break;
+                }
+
+                console.log(new RTCSessionDescription(offer));
+                peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
 
                 const answer = await peerConnection.createAnswer();
                 peerConnection.setLocalDescription(answer);
 
-                fetch(`/api/v1/join?room=vatel`, {
+                fetch(`${api}/exchangeDescription${window.location.search}`, {
                     method: 'post',
                     headers: {
                         'content-type': 'application/json',
@@ -89,15 +93,29 @@ async function connect() {
                     body: JSON.stringify({answer}),
                 });
 
-                connection.close();
+                break;
+            }
+            case STATES.answered: {
+                if (!answer) {
+                    break;
+                }
+
+                console.log(new RTCSessionDescription(answer));
+                peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+
+                break;
+            }
+            case STATES.icing: {
+                break;
+            }
+            case STATES.connected: {
+                break;
             }
         }
-    }, {
-        method: 'post'
     });
 
     peerConnection.onicecandidate = (event) => {
-        event.candidate === null && fetch(`/api/v1/join?room=vatel`, {
+        event.candidate === null && fetch(`${api}/exchangeDescription${window.location.search}`, {
             method: 'post',
             headers: {
                 'content-type': 'application/json',
