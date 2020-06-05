@@ -12,7 +12,12 @@ const STATES = {
 const api = `/api/v1/webrtc`;
 
 const iceServers = [
-    { urls: 'stun:stun.l.google.com:19302' },
+    {
+        urls: [
+            'stun:stun.l.google.com:19302',
+            'stun:23.21.150.121',
+        ]
+    },
 ];
 
 const localVideo = document.querySelector('video.local');
@@ -63,7 +68,7 @@ async function connect() {
 
     const offer = await peerConnection.createOffer();
 
-    peerConnection.setLocalDescription(offer);
+    await peerConnection.setLocalDescription(offer);
 
     connection.poll(async (message) => {
         const { state, offer, answer } = message;
@@ -80,10 +85,10 @@ async function connect() {
                 }
 
                 console.log(new RTCSessionDescription(offer));
-                peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
 
                 const answer = await peerConnection.createAnswer();
-                peerConnection.setLocalDescription(answer);
+                await peerConnection.setLocalDescription(answer);
 
                 fetch(`${api}/exchangeDescription${window.location.search}`, {
                     method: 'post',
@@ -101,7 +106,7 @@ async function connect() {
                 }
 
                 console.log(new RTCSessionDescription(answer));
-                peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
 
                 break;
             }
