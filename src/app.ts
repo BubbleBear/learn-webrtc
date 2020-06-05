@@ -4,6 +4,8 @@ import serve from 'koa-static';
 
 import router from './router';
 
+global.storage = {};
+
 const PORT = process.env.PORT || 9999;
 
 const app = new Koa();
