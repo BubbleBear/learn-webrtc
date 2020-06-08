@@ -98,7 +98,40 @@ Inspired by it's very essential requirements, the most straight way is to copy a
 
 To develop a business oriented product, the above approach doesn't seem sufficient, we need a set of services to exchange *offer*, *answer* and *ICE candidates* for clients.
 
-# TODO
+here are some great summaries from blog wrote by Sam Dutton, a WebRTC develop from Google.
+
+>### Peer discovery [reference to source](https://www.html5rocks.com/en/tutorials/webrtc/infrastructure/)
+
+>This is a fancy way of saying — how do I find someone to talk to?
+
+>For telephone calls we have telephone numbers and directories. For online video chat and messaging, we need identity and presence management systems, and a means for users to initiate sessions. WebRTC apps need a way for clients to signal to each other that they want to start or join a call.
+
+>Peer discovery mechanisms are not defined by WebRTC and we won't go into the options here. The process can be as simple as emailing or messaging a URL: for video chat applications such as talky.io, tawk.com and browsermeeting.com you invite people to a call by sharing a custom link. Developer Chris Ball has built an intriguing serverless-webrtc experiment that enables WebRTC call participants to exchange metadata by any messaging service they like, such as IM, email or homing pigeon.
+
+>### How can I build a signaling service [reference to source](https://www.html5rocks.com/en/tutorials/webrtc/infrastructure/)
+
+>To reiterate: signaling protocols and mechanisms are not defined by WebRTC standards. Whatever you choose, you'll need an intermediary server to exchange signaling messages and application data between clients. Sadly, a web app cannot simply shout into the internet 'Connect me to my friend!'
+
+>Thankfully signaling messages are small, and mostly exchanged at the start of a call. In testing with appr.tc (domain suspended) we found that, for a video chat session, a total of around 30–45 messages were handled by the signaling service, with a total size for all messages of around 10kB.
+
+>As well as being relatively undemanding in terms of bandwidth, WebRTC signaling services don't consume much processing or memory, since they only need to relay messages and retain a small amount of session state data (such as which clients are connected).
+
+In the demo I wrote, I used RESTful APIs and polling to accomplish this task of connecting and exchange ICE info. But I strongly advice not to expose the service as RESTful APIs.
+
+As a signal service, it needs to hold a session and clients within the session. And it needs to hold clients' states of info exchanging. Unfortunately HTTP protocols are stateless, to achieve above goals we need to wrap it with some complex logics. And if the states are corrupted, it'd be a mass and hard to recover. Web socket seems a better approach of exposing the service.
+
+In the service, to coordinate sessions, some mechinisms may also be required.
+
+>### Scaling signaling [reference to source](https://www.html5rocks.com/en/tutorials/webrtc/infrastructure/)
+
+>Although a signaling service consumes relatively little bandwidth and CPU per client, signaling servers for a popular application may have to handle a lot of messages, from different locations, with high levels of concurrency. WebRTC apps that get a lot of traffic need signaling servers able to handle considerable load.
+
+>We won't go into detail here, but there are a number of options for high volume, high performance messaging, including the following:
+
+>* eXtensible Messaging and Presence Protocol (XMPP), originally known as Jabber: a protocol developed for instant messaging that can be used for signaling. Server implementations include ejabberd and Openfire. JavaScript clients such as Strophe.js use BOSH to emulate bidirectional streaming, but for various reasons BOSH may not be as efficient as WebSocket, and for the same reasons may not scale well. (On a tangent: Jingle is an XMPP extension to enable voice and video; the WebRTC project uses network and transport components from the libjingle library, a C++ implementation of Jingle.)
+>* Open source libraries such as ZeroMQ (as used by TokBox for their Rumour service) and OpenMQ. NullMQ applies ZeroMQ concepts to web platforms, using the STOMP protocol over WebSocket.
+>* Commercial cloud messaging platforms that use WebSocket (though they may fall back to long polling) such as Pusher, Kaazing and PubNub. (PubNub also has an API for WebRTC.)
+>* Commercial WebRTC platforms such as vLine.
 
 # REFERENCES
 * [MDN WebRTC API](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API)
