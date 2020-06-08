@@ -47,7 +47,8 @@ function createPeerConnection(tracks) {
     peerConnection.ontrack = (event) => {
         console.log(event);
 
-        remoteVideo.srcObject = event.streams[0];
+        remoteVideo.srcObject = new MediaStream();
+        remoteVideo.srcObject.addTrack(event.track);
     };
 
     return peerConnection;
@@ -66,7 +67,7 @@ async function connect() {
 
     localVideo.srcObject = localStreams.videoStream;
 
-    const offer = await peerConnection.createOffer();
+    let offer = await peerConnection.createOffer();
 
     await peerConnection.setLocalDescription(offer);
 
@@ -119,14 +120,18 @@ async function connect() {
         }
     });
 
-    peerConnection.onicecandidate = (event) => {
-        event.candidate === null && fetch(`${api}/exchangeDescription${window.location.search}`, {
-            method: 'post',
-            headers: {
-                'content-type': 'application/json',
-            },
-            body: JSON.stringify({offer}),
-        });
+    peerConnection.onicecandidate = async (event) => {
+        if (event.candidate === null) {
+            offer = await peerConnection.createOffer();
+
+            fetch(`${api}/exchangeDescription${window.location.search}`, {
+                method: 'post',
+                headers: {
+                    'content-type': 'application/json',
+                },
+                body: JSON.stringify({offer}),
+            });
+        }
     };
 
     return peerConnection;
