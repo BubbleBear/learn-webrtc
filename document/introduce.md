@@ -52,7 +52,7 @@ The diagrams seems clear but with 2 critical concepts missing:
 
 >Interactive Connectivity Establishment (ICE) is a framework to allow your web browser to connect with peers. ICE uses STUN and/or TURN servers to accomplish this, as described below.
 
-### What is STUN and TURN [referenced from MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols)
+### What is STUN and TURN [reference to MDN explanation](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols)
 
 #### STUN
 
@@ -88,7 +88,7 @@ I mean, for a client, what STUN and TURN return are the method to access it self
 
 WebRTC has no defination or specification for signal service implementations.
 
-### Serverless implementation [serverless-webrtc](https://github.com/cjb/serverless-webrtc)
+### Serverless implementation [reference to repo](https://github.com/cjb/serverless-webrtc)
 
 Three essential elements ICE needs are *offer*, *answer* and *ICE candidates*. As long as we can pass the infomation of a client to another, the ICE can be done with WebRTC APIs.
 
