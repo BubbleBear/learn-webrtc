@@ -120,6 +120,8 @@ In the service, to coordinate sessions, some mechinisms may also be required.
 > * Commercial cloud messaging platforms that use WebSocket (though they may fall back to long polling) such as Pusher, Kaazing and PubNub. (PubNub also has an API for WebRTC.)
 > * Commercial WebRTC platforms such as vLine.
 
+---
+
 # REFERENCES
 * [MDN WebRTC API](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API)
 * [WebRTC in the real world: STUN, TURN and signaling By Sam Dutton](https://www.html5rocks.com/en/tutorials/webrtc/infrastructure/)

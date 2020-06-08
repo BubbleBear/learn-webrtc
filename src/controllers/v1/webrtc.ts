@@ -80,6 +80,19 @@ export default class WebRTCController extends BaseController {
         return response;
     }
 
+    reset() {
+        const store = global.storage;
+        const { room } = this.ctx.query;
+
+        console.log(`room ${room} reset`);
+
+        store[room] = {
+            state: STATES.new,
+        };
+
+        return;
+    }
+
     exchangeDescription() {
         const store = global.storage;
         const { room, user } = this.ctx.query;

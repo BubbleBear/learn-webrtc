@@ -44,17 +44,19 @@ function createPeerConnection(tracks) {
         peerConnection.addTrack(track);
     });
 
-    peerConnection.ontrack = (event) => {
+    peerConnection.addEventListener('track', (event) => {
         console.log(event);
 
         remoteVideo.srcObject = new MediaStream();
         remoteVideo.srcObject.addTrack(event.track);
-    };
+    });
 
     return peerConnection;
 }
 
 async function connect() {
+    await fetch(`${api}/reset${window.location.search}`);
+
     const localStreams = {
         videoStream: await navigator.mediaDevices.getUserMedia({ audio: false, video: true }),
     };
@@ -67,9 +69,11 @@ async function connect() {
 
     localVideo.srcObject = localStreams.videoStream;
 
-    let offer = await peerConnection.createOffer();
+    let localOffer = await peerConnection.createOffer();
 
-    await peerConnection.setLocalDescription(offer);
+    await peerConnection.setLocalDescription(localOffer);
+
+    let uniqueIcecandidateListenerLock = false;
 
     connection.poll(async (message) => {
         const { state, offer, answer } = message;
@@ -78,7 +82,30 @@ async function connect() {
 
         switch (state) {
             case STATES.new: {
-                break;
+                if (uniqueIcecandidateListenerLock === false) {
+                    console.log('icecandidate event listener appended');
+                    peerConnection.addEventListener('icecandidate', async (event) => {
+                        console.log(event);
+
+                        // if (event.candidate === null) {
+                            localOffer = await peerConnection.createOffer();
+
+                            await fetch(`${api}/exchangeDescription${window.location.search}`, {
+                                method: 'post',
+                                headers: {
+                                    'content-type': 'application/json',
+                                },
+                                body: JSON.stringify({offer: localOffer}),
+                            });
+    
+                            uniqueIcecandidateListenerLock = false;
+                        // }
+                    }, {
+                        once: true,
+                    });
+
+                    uniqueIcecandidateListenerLock = true;
+                }
             }
             case STATES.offered: {
                 if (!offer) {
@@ -119,20 +146,6 @@ async function connect() {
             }
         }
     });
-
-    peerConnection.onicecandidate = async (event) => {
-        if (event.candidate === null) {
-            offer = await peerConnection.createOffer();
-
-            fetch(`${api}/exchangeDescription${window.location.search}`, {
-                method: 'post',
-                headers: {
-                    'content-type': 'application/json',
-                },
-                body: JSON.stringify({offer}),
-            });
-        }
-    };
 
     return peerConnection;
 };
